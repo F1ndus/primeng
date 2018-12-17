@@ -99,6 +99,8 @@ export class Carousel implements AfterViewChecked,AfterViewInit,OnDestroy{
     documentResponsiveListener: any;
     
     differ: any;
+	private _nums: number = 4 ;
+    private MIN_COMPONENT_WIDTH = 400;
 
     constructor(public el: ElementRef, public domHandler: DomHandler, public renderer: Renderer2, public cd: ChangeDetectorRef) {}
     
@@ -107,13 +109,22 @@ export class Carousel implements AfterViewChecked,AfterViewInit,OnDestroy{
             switch(item.getType()) {
                 case 'item':
                     this.itemTemplate = item.template;
-                break;
+					break;
                 
                 default:
                     this.itemTemplate = item.template;
-                break;
+					break;
             }
         });
+    }
+	
+	@Input() get numVisible(): number {
+        return this._nums;
+    }
+
+    set numVisible(val: number) {
+        this._nums = val;
+        this.handleDataChange();
     }
     
     @Input() get value(): any[] {
@@ -201,23 +212,26 @@ export class Carousel implements AfterViewChecked,AfterViewInit,OnDestroy{
     }
     
     calculateItemWidths () {
-        let firstItem = (this.items && this.items.length) ? this.items[0] : null;
-        if(firstItem) {
+        const firstItem = (this.items && this.items.length) ? this.items[0] : null;
+        if (firstItem) {
             for (let i = 0; i < this.items.length; i++) {
-                this.items[i].style.width = ((this.domHandler.innerWidth(this.viewportViewChild.nativeElement) - (this.domHandler.getHorizontalMargin(firstItem) * this.columns)) / this.columns) + 'px';
+                this.items[i].style.width = ( this.getComponentWidth() / this.columns + 'px');
             }
         }
     }
     
+    getComponentWidth () {
+        const firstItem = (this.items && this.items.length) ? this.items[0] : null;
+        if ( firstItem ) {
+            const componentwidth = this.domHandler.innerWidth(this.viewportViewChild.nativeElement) -
+                (this.domHandler.getHorizontalMargin(firstItem) * this.columns);
+            return componentwidth;
+        }
+    }
+
     calculateColumns() {
-        if(window.innerWidth <= this.breakpoint) {
-            this.shrinked = true;
-            this.columns = 1;
-        }
-        else {
-            this.shrinked = false;
-            this.columns = this.numVisible;
-        }
+        this.recalc();
+        this.shrinked = false;
         this.page = Math.floor(this.firstVisible / this.columns);
     }
     
@@ -292,6 +306,43 @@ export class Carousel implements AfterViewChecked,AfterViewInit,OnDestroy{
         
         this.calculateItemWidths();
         this.setPage(Math.floor(this.firstVisible / this.columns), true);
+    }
+	
+	    updateState() {
+        this.recalc();
+        this.calculateItemWidths();
+        this.setPage(Math.floor(this.firstVisible / this.columns), true);
+        this.updateLinks();
+        this.updateDropdown();
+    }
+
+    recalc() {
+        const componentwidth = this.getComponentWidth();
+        if ( this._value.length > 0) {
+            // @ts-ignore
+            const fittingItems = parseInt(componentwidth / this.MIN_COMPONENT_WIDTH , 10);
+            if ( fittingItems > this.value.length  && this.value.length > 0) {
+                // Dont show more items than specified
+                this.columns = this._value.length;
+            } else {
+                // Fill up if maxitems < actual items
+                if (this.value.length <= fittingItems) {
+                    this.columns = this.value.length;
+                } else {
+                    if (fittingItems > 0) {
+                        if ( fittingItems > this._nums ) {
+                            this.columns = this._nums;
+                        } else {
+                            this.columns = fittingItems;
+                        }
+                    } else {
+                        this.columns = 1;
+                    }
+                }
+            }
+        } else {
+            this.columns = 1;
+        }
     }
     
     startAutoplay() {
