@@ -9,7 +9,7 @@
 
     <p-toast [style]="{marginTop: '80px'}"></p-toast>
 
-    <p-carousel headerText="Cars" [value]="cars">
+    <p-carousel headerText="Cars" [value]="cars" [numVisible]="9" [responsive]="true">
         <ng-template let-car pTemplate="item">
             <div class="ui-grid ui-grid-responsive">
                 <div class="ui-grid-row">
