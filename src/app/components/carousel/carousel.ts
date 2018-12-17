@@ -149,7 +149,6 @@ export class Carousel implements AfterViewChecked, AfterViewInit, OnDestroy {
 
     ngAfterViewChecked() {
         if (this.valuesChanged && this.containerViewChild.nativeElement.offsetParent) {
-            this.updateState();
             this.render();
             this.valuesChanged = false;
         }
@@ -228,16 +227,11 @@ export class Carousel implements AfterViewChecked, AfterViewInit, OnDestroy {
     }
 
     calculateColumns() {
-        if(window.innerWidth <= this.breakpoint) {
-            this.shrinked = true;
-            this.columns = 1;
-        }
-        else {
-            this.shrinked = false;
-            this.columns = this.numVisible;
-        }
+        this.recalc();
+        this.shrinked = false;
         this.page = Math.floor(this.firstVisible / this.columns);
     }
+
 
     onNextNav() {
         let lastPage = (this.page === (this.totalPages - 1));
@@ -304,9 +298,7 @@ export class Carousel implements AfterViewChecked, AfterViewInit, OnDestroy {
     }
 
     recalc() {
-        const oldValue = this._nums;
         const componentwidth = this.getComponentWidth();
-        const items = this.items;
         if ( this._value.length > 0) {
             // @ts-ignore
             const fittingItems = parseInt(componentwidth / this.MIN_COMPONENT_WIDTH , 10);
