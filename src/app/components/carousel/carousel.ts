@@ -98,7 +98,7 @@ export class Carousel implements AfterViewChecked, AfterViewInit, OnDestroy {
 
     differ: any;
     private _nums: number = 4 ;
-    private MIN_COMPONENT_WIDTH = 200;
+    private MIN_COMPONENT_WIDTH = 400;
 
     constructor(public el: ElementRef, public domHandler: DomHandler, public renderer: Renderer2, public cd: ChangeDetectorRef) {}
 
@@ -210,8 +210,8 @@ export class Carousel implements AfterViewChecked, AfterViewInit, OnDestroy {
     }
 
     calculateItemWidths () {
-        let firstItem = (this.items && this.items.length) ? this.items[0] : null;
-        if(firstItem) {
+        const firstItem = (this.items && this.items.length) ? this.items[0] : null;
+        if (firstItem) {
             for (let i = 0; i < this.items.length; i++) {
                 this.items[i].style.width = ( this.getComponentWidth() / this.columns + 'px');
             }
@@ -221,8 +221,9 @@ export class Carousel implements AfterViewChecked, AfterViewInit, OnDestroy {
     getComponentWidth () {
         const firstItem = (this.items && this.items.length) ? this.items[0] : null;
         if ( firstItem ) {
-            return this.domHandler.innerWidth(this.viewportViewChild.nativeElement) -
+            const componentwidth = this.domHandler.innerWidth(this.viewportViewChild.nativeElement) -
                 (this.domHandler.getHorizontalMargin(firstItem) * this.columns);
+            return componentwidth;
         }
     }
 
@@ -303,16 +304,22 @@ export class Carousel implements AfterViewChecked, AfterViewInit, OnDestroy {
             // @ts-ignore
             const fittingItems = parseInt(componentwidth / this.MIN_COMPONENT_WIDTH , 10);
             if ( fittingItems > this.value.length  && this.value.length > 0) {
-                this.columns = this._nums;
+                // Dont show more items than specified
+                this.columns = this._value.length;
             } else {
-                if (fittingItems > 0) {
-                    if ( fittingItems > this._nums ) {
-                        this.columns = this._nums;
-                    } else {
-                        this.columns = fittingItems;
-                    }
+                // Fill up if maxitems < actual items
+                if (this.value.length <= fittingItems) {
+                    this.columns = this.value.length;
                 } else {
-                    this.columns = 1;
+                    if (fittingItems > 0) {
+                        if ( fittingItems > this._nums ) {
+                            this.columns = this._nums;
+                        } else {
+                            this.columns = fittingItems;
+                        }
+                    } else {
+                        this.columns = 1;
+                    }
                 }
             }
         } else {
