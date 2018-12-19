@@ -38,8 +38,6 @@ import {CommonModule} from '@angular/common';
 })
 export class Carousel implements AfterViewChecked,AfterViewInit,OnDestroy{
     
-    @Input() numVisible: number = 3;
-
     @Input() firstVisible: number = 0;
 
     @Input() headerText: string;
@@ -290,25 +288,10 @@ export class Carousel implements AfterViewChecked,AfterViewInit,OnDestroy{
         else
             return false;
     }
-    
+
+
+
     updateState() {
-        let win = window;
-        if(win.innerWidth <= this.breakpoint) {
-            this.shrinked = true;
-            this.columns = 1;
-        }
-        else if(this.shrinked) {
-            this.shrinked = false;
-            this.columns = this.numVisible;
-            this.updateLinks();
-            this.updateDropdown();
-        }
-        
-        this.calculateItemWidths();
-        this.setPage(Math.floor(this.firstVisible / this.columns), true);
-    }
-	
-	    updateState() {
         this.recalc();
         this.calculateItemWidths();
         this.setPage(Math.floor(this.firstVisible / this.columns), true);
@@ -320,31 +303,25 @@ export class Carousel implements AfterViewChecked,AfterViewInit,OnDestroy{
         const componentwidth = this.getComponentWidth();
         if ( this._value.length > 0) {
             // @ts-ignore
-            const fittingItems = parseInt(componentwidth / this.MIN_COMPONENT_WIDTH , 10);
-            if ( fittingItems > this.value.length  && this.value.length > 0) {
-                // Dont show more items than specified
-                this.columns = this._value.length;
+            const fittingItems = parseInt(componentwidth / this.MIN_COMPONENT_WIDTH, 10);
+            const maxVisible = this._nums;
+            const anzahl = this.value.length;
+            if (anzahl > fittingItems && fittingItems > maxVisible) {
+                this.columns = maxVisible;
+            } else if ( anzahl > fittingItems && fittingItems <= maxVisible ) {
+                this.columns = fittingItems !== 0 ? fittingItems : 1;
+            } else if ( anzahl <= fittingItems && anzahl >= maxVisible ) {
+                this.columns = maxVisible;
+            } else if ( anzahl <= fittingItems && anzahl < maxVisible ) {
+                this.columns = this.value.length;
             } else {
-                // Fill up if maxitems < actual items
-                if (this.value.length <= fittingItems) {
-                    this.columns = this.value.length;
-                } else {
-                    if (fittingItems > 0) {
-                        if ( fittingItems > this._nums ) {
-                            this.columns = this._nums;
-                        } else {
-                            this.columns = fittingItems;
-                        }
-                    } else {
-                        this.columns = 1;
-                    }
-                }
+                console.warn('Probably bug in recalc method (carousel)');
+                this.columns = 1;
             }
-        } else {
-            this.columns = 1;
         }
     }
     
+
     startAutoplay() {
         this.interval = setInterval(() => {
             if(this.page === (this.totalPages - 1))
